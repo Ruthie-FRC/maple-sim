@@ -64,10 +64,37 @@ public class VendorJNI {
 
     // ── Native method declarations ───────────────────────────────────────────
 
+    /**
+     * Performs one-time initialization of the native driver.
+     *
+     * <p>Must be called before any other method when the native library is loaded. Returns {@code
+     * 1} on success; any other value indicates an initialization failure.
+     *
+     * @return {@code 1} on success
+     */
     public static native int initialize();
 
+    /**
+     * Creates a native physics world.
+     *
+     * <p>Every successful call to {@code createWorld} must be paired with a corresponding {@link
+     * #destroyWorld(long)} call to release native resources. The returned handle is {@code 0} on
+     * failure and non-zero on success.
+     *
+     * @param fixedDtSeconds the fixed simulation timestep in seconds (e.g. {@code 0.005} for 200 Hz)
+     * @param enableGravity {@code true} to enable gravity; {@code false} for top-down FRC field simulations
+     * @return a non-zero native world handle on success, or {@code 0} on failure
+     */
     public static native long createWorld(double fixedDtSeconds, boolean enableGravity);
 
+    /**
+     * Destroys a previously created native physics world and releases all associated resources.
+     *
+     * <p>Must be called once for every successful {@link #createWorld(double, boolean)} call.
+     * Passing an invalid or already-destroyed handle is a no-op.
+     *
+     * @param worldHandle the native world handle returned by {@link #createWorld(double, boolean)}
+     */
     public static native void destroyWorld(long worldHandle);
 
     public static native int createBody(long worldHandle, double massKg);

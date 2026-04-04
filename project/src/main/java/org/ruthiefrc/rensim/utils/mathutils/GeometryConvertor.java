@@ -15,7 +15,11 @@ public class GeometryConvertor {
         return new Vec2(wpilibTranslation2d.getX(), wpilibTranslation2d.getY());
     }
 
-    /** Backward-compatible alias for {@link #toVec2(Translation2d)}. */
+    /** Backward-compatible alias for {@link #toVec2(Translation2d)}.
+     *
+     * @deprecated Use {@link #toVec2(Translation2d)} — dyn4j is no longer used.
+     */
+    @Deprecated
     public static Vec2 toDyn4jVector2(Translation2d wpilibTranslation2d) {
         return toVec2(wpilibTranslation2d);
     }
@@ -30,7 +34,11 @@ public class GeometryConvertor {
         return new FrcRotation(wpilibRotation2d.getRadians());
     }
 
-    /** Backward-compatible alias for {@link #toFrcRotation(Rotation2d)}. */
+    /** Backward-compatible alias for {@link #toFrcRotation(Rotation2d)}.
+     *
+     * @deprecated Use {@link #toFrcRotation(Rotation2d)} — dyn4j is no longer used.
+     */
+    @Deprecated
     public static FrcRotation toDyn4jRotation(Rotation2d wpilibRotation2d) {
         return toFrcRotation(wpilibRotation2d);
     }
@@ -48,7 +56,11 @@ public class GeometryConvertor {
         return transform;
     }
 
-    /** Backward-compatible alias for {@link #toFrcTransform(Pose2d)}. */
+    /** Backward-compatible alias for {@link #toFrcTransform(Pose2d)}.
+     *
+     * @deprecated Use {@link #toFrcTransform(Pose2d)} — dyn4j is no longer used.
+     */
+    @Deprecated
     public static FrcTransform toDyn4jTransform(Pose2d wpilibPose2d) {
         return toFrcTransform(wpilibPose2d);
     }
@@ -68,7 +80,11 @@ public class GeometryConvertor {
         return new Vec2(wpilibChassisSpeeds.vxMetersPerSecond, wpilibChassisSpeeds.vyMetersPerSecond);
     }
 
-    /** Backward-compatible alias for {@link #toLinearVelocityVec2(ChassisSpeeds)}. */
+    /** Backward-compatible alias for {@link #toLinearVelocityVec2(ChassisSpeeds)}.
+     *
+     * @deprecated Use {@link #toLinearVelocityVec2(ChassisSpeeds)} — dyn4j is no longer used.
+     */
+    @Deprecated
     public static Vec2 toDyn4jLinearVelocity(ChassisSpeeds wpilibChassisSpeeds) {
         return toLinearVelocityVec2(wpilibChassisSpeeds);
     }
