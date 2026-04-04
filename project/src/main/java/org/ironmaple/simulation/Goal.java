@@ -10,8 +10,8 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import java.util.List;
 import java.util.function.Predicate;
-import org.dyn4j.geometry.Rectangle;
-import org.dyn4j.geometry.Vector2;
+import frcsim_physics.RectangleShape;
+import frcsim_physics.Vec2;
 import org.ironmaple.simulation.gamepieces.GamePiece;
 
 /**
@@ -71,8 +71,8 @@ public abstract class Goal implements SimulatedArena.Simulatable {
      * @param maxZMeters maximum Z coordinate in meters
      * @return position checker for box-shaped bounds
      */
-    public static PositionChecker box(Rectangle xyBox, double minZMeters, double maxZMeters) {
-        return position -> xyBox.contains(new Vector2(position.getX(), position.getY()))
+    public static PositionChecker box(RectangleShape xyBox, double minZMeters, double maxZMeters) {
+        return position -> xyBox.contains(new Vec2(position.getX(), position.getY()))
                 && position.getZ() >= minZMeters
                 && position.getZ() <= maxZMeters;
     }
@@ -141,7 +141,7 @@ public abstract class Goal implements SimulatedArena.Simulatable {
         return gamePiece -> true;
     }
 
-    protected Rectangle xyBox;
+    protected RectangleShape xyBox;
     protected final Distance height;
     protected final Distance elevation;
 
@@ -197,8 +197,8 @@ public abstract class Goal implements SimulatedArena.Simulatable {
 
         this.allowGrounded = allowGrounded;
 
-        this.xyBox = new Rectangle(xDimension.in(Units.Meters), yDimension.in(Units.Meters));
-        this.xyBox.translate(new Vector2(position.getX(), position.getY()));
+        this.xyBox = new RectangleShape(xDimension.in(Units.Meters), yDimension.in(Units.Meters));
+        this.xyBox.translate(new Vec2(position.getX(), position.getY()));
 
         minZMeters = position.getZ();
         maxZMeters = position.getZ() + height.in(Units.Meters);
@@ -364,7 +364,7 @@ public abstract class Goal implements SimulatedArena.Simulatable {
         // Call our values just once.
         var pose = gamePiece.getPose3d();
 
-        return xyBox.contains(new Vector2(pose.getX(), pose.getY()))
+        return xyBox.contains(new Vec2(pose.getX(), pose.getY()))
                 && pose.getZ() >= minZMeters
                 && pose.getZ() <= maxZMeters;
     }

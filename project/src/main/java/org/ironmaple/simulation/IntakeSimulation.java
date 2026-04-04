@@ -4,21 +4,19 @@ import static edu.wpi.first.units.Units.Meters;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Distance;
+import frcsim_physics.BodyFixture2d;
+import frcsim_physics.CollisionData2d;
+import frcsim_physics.Contact2d;
+import frcsim_physics.ContactListener2d;
+import frcsim_physics.Convex2d;
+import frcsim_physics.RectangleShape;
+import frcsim_physics.RigidBody;
+import frcsim_physics.SolvedContact2d;
+import frcsim_physics.Vec2;
 import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.function.Predicate;
-import org.dyn4j.collision.CollisionBody;
-import org.dyn4j.collision.Fixture;
-import org.dyn4j.dynamics.Body;
-import org.dyn4j.dynamics.BodyFixture;
-import org.dyn4j.dynamics.contact.Contact;
-import org.dyn4j.dynamics.contact.SolvedContact;
-import org.dyn4j.geometry.Convex;
-import org.dyn4j.geometry.Rectangle;
-import org.dyn4j.geometry.Vector2;
-import org.dyn4j.world.ContactCollisionData;
-import org.dyn4j.world.listener.ContactListener;
 import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
 import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralAlgaeStack;
@@ -53,7 +51,7 @@ import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralAlgae
  * <p><strong>Note:</strong> This class simulates an idealized "touch it, get it" intake and does not model the actual
  * functioning of an intake mechanism.
  */
-public class IntakeSimulation extends BodyFixture {
+public class IntakeSimulation extends BodyFixture2d {
     private final int capacity;
     private int gamePiecesInIntakeCount;
     private boolean intakeRunning;
@@ -121,9 +119,9 @@ public class IntakeSimulation extends BodyFixture {
                 capacity);
     }
 
-    private static Rectangle getIntakeRectangle(
+    private static RectangleShape getIntakeRectangle(
             AbstractDriveTrainSimulation driveTrainSimulation, double width, double lengthExtended, IntakeSide side) {
-        final Rectangle intakeRectangle = new Rectangle(width, lengthExtended);
+        final RectangleShape intakeRectangle = new RectangleShape(width, lengthExtended);
         intakeRectangle.rotate(
                 switch (side) {
                     case LEFT, RIGHT -> 0;
@@ -132,13 +130,13 @@ public class IntakeSimulation extends BodyFixture {
         final double distanceTransformed = lengthExtended / 2 - 0.01;
         intakeRectangle.translate(
                 switch (side) {
-                    case LEFT -> new Vector2(
+                    case LEFT -> new Vec2(
                             0, driveTrainSimulation.config.bumperWidthY.in(Meters) / 2 + distanceTransformed);
-                    case RIGHT -> new Vector2(
+                    case RIGHT -> new Vec2(
                             0, -driveTrainSimulation.config.bumperWidthY.in(Meters) / 2 - distanceTransformed);
-                    case FRONT -> new Vector2(
+                    case FRONT -> new Vec2(
                             driveTrainSimulation.config.bumperLengthX.in(Meters) / 2 + distanceTransformed, 0);
-                    case BACK -> new Vector2(
+                    case BACK -> new Vec2(
                             -driveTrainSimulation.config.bumperLengthX.in(Meters) / 2 - distanceTransformed / 2, 0);
                 });
 
@@ -154,13 +152,13 @@ public class IntakeSimulation extends BodyFixture {
      *
      * @param targetedGamePieceType the type of game pieces that this intake can collect
      * @param driveTrainSimulation the chassis to which this intake is attached
-     * @param shape the shape of the intake when fully extended, represented as a {@link Convex} object
+     * @param shape the shape of the intake when fully extended, represented as a {@link Convex2d} object
      * @param capacity the maximum number of game pieces that the intake can hold
      */
     public IntakeSimulation(
             String targetedGamePieceType,
             AbstractDriveTrainSimulation driveTrainSimulation,
-            Convex shape,
+            Convex2d shape,
             int capacity) {
         super(shape);
         super.setDensity(0);
@@ -291,7 +289,7 @@ public class IntakeSimulation extends BodyFixture {
     /**
      *
      *
-     * <h2>The {@link ContactListener} for the Intake Simulation.</h2>
+     * <h2>The {@link ContactListener2d} for the Intake Simulation.</h2>
      *
      * <p>This class can be added to the simulation world to detect and manage contacts between the intake and
      * {@link GamePieceOnFieldSimulation} instances of the type {@link #targetedGamePieceType}.
@@ -299,14 +297,14 @@ public class IntakeSimulation extends BodyFixture {
      * <p>If contact is detected and the intake is running, the {@link GamePieceOnFieldSimulation} will be marked for
      * removal from the field.
      */
-    public final class GamePieceContactListener implements ContactListener<Body> {
+    public final class GamePieceContactListener implements ContactListener2d {
         @Override
-        public void begin(ContactCollisionData collision, Contact contact) {
+        public void begin(CollisionData2d collision, Contact2d contact) {
             if (!intakeRunning) return;
             if (gamePiecesInIntakeCount >= capacity) return;
 
-            final CollisionBody<?> collisionBody1 = collision.getBody1(), collisionBody2 = collision.getBody2();
-            final Fixture fixture1 = collision.getFixture1(), fixture2 = collision.getFixture2();
+            final RigidBody collisionBody1 = collision.getBody1(), collisionBody2 = collision.getBody2();
+            final BodyFixture2d fixture1 = collision.getFixture1(), fixture2 = collision.getFixture2();
 
             if (collisionBody1 instanceof GamePieceOnFieldSimulation gamePiece
                     && Objects.equals(gamePiece.type, targetedGamePieceType)
@@ -333,22 +331,22 @@ public class IntakeSimulation extends BodyFixture {
 
         /* functions not used */
         @Override
-        public void persist(ContactCollisionData collision, Contact oldContact, Contact newContact) {}
+        public void persist(CollisionData2d collision, Contact2d oldContact, Contact2d newContact) {}
 
         @Override
-        public void end(ContactCollisionData collision, Contact contact) {}
+        public void end(CollisionData2d collision, Contact2d contact) {}
 
         @Override
-        public void destroyed(ContactCollisionData collision, Contact contact) {}
+        public void destroyed(CollisionData2d collision, Contact2d contact) {}
 
         @Override
-        public void collision(ContactCollisionData collision) {}
+        public void collision(CollisionData2d collision) {}
 
         @Override
-        public void preSolve(ContactCollisionData collision, Contact contact) {}
+        public void preSolve(CollisionData2d collision, Contact2d contact) {}
 
         @Override
-        public void postSolve(ContactCollisionData collision, SolvedContact contact) {}
+        public void postSolve(CollisionData2d collision, SolvedContact2d contact) {}
     }
 
     /**

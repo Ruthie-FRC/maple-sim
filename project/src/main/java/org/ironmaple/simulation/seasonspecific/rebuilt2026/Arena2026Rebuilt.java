@@ -19,7 +19,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import java.util.List;
-import org.dyn4j.dynamics.Settings;
+import frcsim_physics.PhysicsSettings;
 import org.ironmaple.simulation.SimulatedArena;
 
 public class Arena2026Rebuilt extends SimulatedArena {
@@ -199,7 +199,7 @@ public class Arena2026Rebuilt extends SimulatedArena {
     public Arena2026Rebuilt(boolean AddRampCollider) {
         super(new RebuiltFieldObstaclesMap(AddRampCollider));
 
-        Settings settings = physicsWorld.getSettings();
+        PhysicsSettings settings = physicsWorld.getSettings();
 
         // settings.setVelocityConstraintSolverIterations(3);
         // settings.setPositionConstraintSolverIterations(2);

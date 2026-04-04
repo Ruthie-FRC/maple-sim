@@ -36,7 +36,7 @@ dependencies {
     //    implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
 
-    implementation 'org.dyn4j:dyn4j:5.0.2'
+    // RenSim frcsim_physics layer (pure-Java 2D physics, replaces dyn4j)
 
     implementation "edu.wpi.first.cscore:cscore-java:$wpilibVersion"
     implementation "edu.wpi.first.cameraserver:cameraserver-java:$wpilibVersion"

@@ -19,13 +19,13 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.util.*;
-import org.dyn4j.dynamics.Body;
-import org.dyn4j.dynamics.BodyFixture;
-import org.dyn4j.geometry.Convex;
-import org.dyn4j.geometry.Geometry;
-import org.dyn4j.geometry.MassType;
-import org.dyn4j.world.PhysicsWorld;
-import org.dyn4j.world.World;
+import frcsim_physics.BodyFixture2d;
+import frcsim_physics.Convex2d;
+import frcsim_physics.Geometry2d;
+import frcsim_physics.MassType2d;
+import frcsim_physics.PhysicsSettings;
+import frcsim_physics.PhysicsWorld2d;
+import frcsim_physics.RigidBody;
 import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
 import org.ironmaple.simulation.gamepieces.GamePiece;
 import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation;
@@ -211,7 +211,7 @@ public abstract class SimulatedArena {
         SIMULATION_DT = robotPeriod.div(SIMULATION_SUB_TICKS_IN_1_PERIOD);
     }
 
-    protected final World<Body> physicsWorld;
+    protected final PhysicsWorld2d physicsWorld;
     protected final Set<AbstractDriveTrainSimulation> driveTrainSimulations;
 
     protected final Set<GamePiece> gamePieces;
@@ -231,9 +231,9 @@ public abstract class SimulatedArena {
      * @param obstaclesMap the season-specific field map containing the layout of obstacles for the simulation
      */
     protected SimulatedArena(FieldMap obstaclesMap) {
-        this.physicsWorld = new World<>();
-        this.physicsWorld.setGravity(PhysicsWorld.ZERO_GRAVITY);
-        for (Body obstacle : obstaclesMap.obstacles) this.physicsWorld.addBody(obstacle);
+        this.physicsWorld = new PhysicsWorld2d();
+        this.physicsWorld.setGravity(PhysicsWorld2d.ZERO_GRAVITY);
+        for (RigidBody obstacle : obstaclesMap.obstacles) this.physicsWorld.addBody(obstacle);
         this.driveTrainSimulations = new HashSet<>();
         customSimulations = new ArrayList<>();
         this.gamePieces = new HashSet<>();
@@ -722,32 +722,32 @@ public abstract class SimulatedArena {
      * class to store the field map for that specific season's game.
      */
     public abstract static class FieldMap {
-        private final List<Body> obstacles = new ArrayList<>();
+        private final List<RigidBody> obstacles = new ArrayList<>();
 
         protected void addBorderLine(Translation2d startingPoint, Translation2d endingPoint) {
             addCustomObstacle(
-                    Geometry.createSegment(
+                    Geometry2d.createSegment(
                             GeometryConvertor.toDyn4jVector2(startingPoint),
                             GeometryConvertor.toDyn4jVector2(endingPoint)),
                     new Pose2d());
         }
 
         protected void addRectangularObstacle(double width, double height, Pose2d absolutePositionOnField) {
-            addCustomObstacle(Geometry.createRectangle(width, height), absolutePositionOnField);
+            addCustomObstacle(Geometry2d.createRectangle(width, height), absolutePositionOnField);
         }
 
-        protected void addCustomObstacle(Convex shape, Pose2d absolutePositionOnField) {
-            final Body obstacle = createObstacle(shape);
+        protected void addCustomObstacle(Convex2d shape, Pose2d absolutePositionOnField) {
+            final RigidBody obstacle = createObstacle(shape);
 
-            obstacle.getTransform().set(GeometryConvertor.toDyn4jTransform(absolutePositionOnField));
+            obstacle.transform.set(GeometryConvertor.toDyn4jTransform(absolutePositionOnField));
 
             obstacles.add(obstacle);
         }
 
-        private static Body createObstacle(Convex shape) {
-            final Body obstacle = new Body();
-            obstacle.setMass(MassType.INFINITE);
-            final BodyFixture fixture = obstacle.addFixture(shape);
+        private static RigidBody createObstacle(Convex2d shape) {
+            final RigidBody obstacle = new RigidBody();
+            obstacle.setMass(MassType2d.INFINITE);
+            final BodyFixture2d fixture = obstacle.addFixture(shape);
             fixture.setFriction(0.6);
             fixture.setRestitution(0.3);
             return obstacle;

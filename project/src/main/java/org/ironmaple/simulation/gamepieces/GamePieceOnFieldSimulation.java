@@ -12,10 +12,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Mass;
 import java.util.function.DoubleSupplier;
-import org.dyn4j.dynamics.Body;
-import org.dyn4j.dynamics.BodyFixture;
-import org.dyn4j.geometry.Convex;
-import org.dyn4j.geometry.MassType;
+import frcsim_physics.BodyFixture2d;
+import frcsim_physics.Convex2d;
+import frcsim_physics.MassType2d;
+import frcsim_physics.RigidBody;
+import frcsim_physics.Vec2;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.utils.mathutils.GeometryConvertor;
@@ -33,7 +34,7 @@ import org.ironmaple.utils.mathutils.GeometryConvertor;
  * {@link org.ironmaple.simulation.SimulatedArena} through
  * {@link SimulatedArena#addGamePiece(GamePieceOnFieldSimulation)}.
  */
-public class GamePieceOnFieldSimulation extends Body implements GamePiece {
+public class GamePieceOnFieldSimulation extends RigidBody implements GamePiece {
     public static final double COEFFICIENT_OF_FRICTION = 0.8, MINIMUM_BOUNCING_VELOCITY = 0.2;
 
     /**
@@ -86,14 +87,14 @@ public class GamePieceOnFieldSimulation extends Body implements GamePiece {
         this.type = info.type;
         this.zPositionSupplier = zPositionSupplier;
 
-        BodyFixture bodyFixture = super.addFixture(info.shape);
+        BodyFixture2d bodyFixture = super.addFixture(info.shape);
 
         bodyFixture.setFriction(COEFFICIENT_OF_FRICTION);
         bodyFixture.setRestitution(info.coefficientOfRestitution);
         bodyFixture.setRestitutionVelocity(MINIMUM_BOUNCING_VELOCITY);
 
         bodyFixture.setDensity(info.gamePieceMass.in(Kilogram) / info.shape.getArea());
-        super.setMass(MassType.NORMAL);
+        super.setMass(MassType2d.NORMAL);
 
         super.setLinearDamping(info.linearDamping);
         super.setAngularDamping(info.angularDamping);
@@ -157,7 +158,7 @@ public class GamePieceOnFieldSimulation extends Body implements GamePiece {
      */
     public record GamePieceInfo(
             String type,
-            Convex shape,
+            Convex2d shape,
             Distance gamePieceHeight,
             Mass gamePieceMass,
             double linearDamping,

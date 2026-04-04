@@ -5,7 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import java.util.List;
-import org.dyn4j.geometry.Circle;
+import frcsim_physics.CircleShape;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation;
 import org.ironmaple.utils.mathutils.GeometryConvertor;
@@ -29,7 +29,7 @@ import org.ironmaple.utils.mathutils.GeometryConvertor;
  */
 public class ReefscapeCoralAlgaeStack extends GamePieceOnFieldSimulation {
     public static final GamePieceInfo REEFSCAPE_STACK_INFO =
-            new GamePieceInfo("CoralAlgaeStack", new Circle(0.15), Meters.zero(), Kilograms.of(0.7), 1.8, 4, 0.3);
+            new GamePieceInfo("CoralAlgaeStack", new CircleShape(0.15), Meters.zero(), Kilograms.of(0.7), 1.8, 4, 0.3);
 
     private final SimulatedArena arena;
     private final Translation2d initialPosition;
