@@ -138,6 +138,16 @@ public class RigidBody {
         return transform;
     }
 
+    /**
+     * Overwrites the body's transform (position and rotation) with the given transform.
+     *
+     * <p>Unlike directly mutating {@link #transform}, this is the API-style setter used by
+     * {@code GamePieceOnFieldSimulation} and mirrors dyn4j's {@code Body.setTransform(Transform)}.
+     */
+    public void setTransform(FrcTransform newTransform) {
+        transform.set(newTransform);
+    }
+
     // ── Velocity ────────────────────────────────────────────────────────────
 
     public Vec2 getLinearVelocity() {
