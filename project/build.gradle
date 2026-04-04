@@ -36,8 +36,6 @@ dependencies {
     //    implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
 
-    // RenSim frcsim_physics layer (pure-Java 2D physics, replaces dyn4j)
-
     implementation "edu.wpi.first.cscore:cscore-java:$wpilibVersion"
     implementation "edu.wpi.first.cameraserver:cameraserver-java:$wpilibVersion"
     implementation "edu.wpi.first.ntcore:ntcore-java:$wpilibVersion"
@@ -52,13 +50,38 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-core:2.15.2"
     implementation "com.fasterxml.jackson.core:jackson-databind:2.15.2"
     implementation 'edu.wpi.first.thirdparty.frc2024.opencv:opencv-java:4.8.0-2'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
+
+// Set up java tests
+test {
+    useJUnitPlatform()
+    systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+    testLogging {
+        events "failed"
+        exceptionFormat = "full"
+    }
+}
+
+if (project.hasProperty('onlylinuxathena') || project.hasProperty('onlylinuxarm32') || project.hasProperty('onlylinuxarm64') || project.hasProperty('onlywindowsarm64') || project.hasProperty('onlylinuxsystemcore')) {
+    test.enabled = false
+}
+
+def systemArch = NativePlatforms.desktop
 
 // Set up exports properly
 nativeUtils {
     exportsConfigs {
         // Main library is just default empty. This will export everything
         RenSim {
+        }
+    }
+    privateExportsConfigs {
+        // Only export explicit symbols from the JNI driver library
+        VendorDriver {
+            exportsFile = project.file("src/main/driver/symbols.txt")
         }
     }
 }
@@ -109,6 +132,63 @@ spotless {
 compileJava.dependsOn 'spotlessApply'
 
 apply from: 'publish.gradle'
+
+model {
+    components {
+        VendorDriver(JniNativeLibrarySpec) {
+            enableCheckTask true
+            javaCompileTasks << compileJava
+            jniCrossCompileOptions << JniCrossCompileOptions(nativeUtils.wpi.platforms.roborio)
+            jniCrossCompileOptions << JniCrossCompileOptions(nativeUtils.wpi.platforms.linuxarm32)
+            jniCrossCompileOptions << JniCrossCompileOptions(nativeUtils.wpi.platforms.linuxarm64)
+            sources {
+                cpp {
+                    source {
+                        srcDirs 'src/main/driver/cpp'
+                        include '**/*.cpp'
+                    }
+                    exportedHeaders {
+                        srcDirs 'src/main/driver/include'
+                    }
+                }
+            }
+            nativeUtils.useRequiredLibrary(it, "wpilib_shared")
+        }
+    }
+    testSuites {
+        VendorTest {
+            sources.cpp {
+                source {
+                    srcDir 'src/test/native/cpp'
+                    include '**/*.cpp'
+                }
+            }
+            binaries.all {
+                lib library: 'VendorDriver', linkage: 'shared'
+
+                def arch = it.targetPlatform.name
+                if (systemArch == arch && it.buildType.name == 'debug') {
+                    def filePath = it.tasks.install.installDirectory.get().toString() + File.separatorChar + 'lib'
+                    test.dependsOn it.tasks.install
+                    test.systemProperty 'java.library.path', filePath
+                    test.environment 'LD_LIBRARY_PATH', filePath
+                    test.workingDir filePath
+                }
+            }
+            nativeUtils.useRequiredLibrary(it, "wpilib_executable_shared", "googletest_static")
+        }
+
+        VendorDriverTest {
+            sources.cpp {
+                source {
+                    srcDir 'src/test/driver/cpp'
+                    include '**/*.cpp'
+                }
+            }
+            nativeUtils.useRequiredLibrary(it, "wpilib_executable_shared", "googletest_static")
+        }
+    }
+}
 
 wrapper {
     gradleVersion '8.11'

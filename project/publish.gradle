@@ -47,10 +47,38 @@ def driverZipBaseName = "_GROUP_org_ruthiefrc_ID_${baseArtifactId}-driver_CLS"
 def zipBaseName = "_GROUP_org_ruthiefrc_ID_${baseArtifactId}-cpp_CLS"
 def javaBaseName = "_GROUP_org_ruthiefrc_ID_${baseArtifactId}-java_CLS"
 
-copy {
-    from "rensim.json"
-    into "$rootDir/../docs/vendordep"
-    expand(version: "$pubVersion")
+def templateVendorFile = "rensim.json"
+
+task vendordepJson() {
+    description = 'Builds the vendordep json file.'
+    group = 'Build'
+    outputs.file("$buildDir/repos/$templateVendorFile")
+
+    copy {
+        from templateVendorFile
+        into "$buildDir/repos/"
+        expand(version: pubVersion,
+                groupId: artifactGroupId,
+                artifactId: baseArtifactId)
+    }
+    // Also copy resolved JSON to docs/ for GitHub Pages hosting
+    copy {
+        from templateVendorFile
+        into "$rootDir/../docs/vendordep"
+        expand(version: pubVersion,
+                groupId: artifactGroupId,
+                artifactId: baseArtifactId)
+    }
+}
+
+task vendordepJsonZip(type: Zip) {
+    destinationDirectory = outputsFolder
+    archiveBaseName = "vendordepJson"
+
+    from("$buildDir/repos/$templateVendorFile") {
+        into '/'
+    }
+    dependsOn vendordepJson
 }
 
 task cppHeadersZip(type: Zip) {
@@ -163,20 +191,54 @@ copyAllOutputs.dependsOn outputJavadocJar
 addTaskToCopyAllOutputs(outputJar)
 addTaskToCopyAllOutputs(outputSourcesJar)
 addTaskToCopyAllOutputs(outputJavadocJar)
+addTaskToCopyAllOutputs(vendordepJsonZip)
+
+build.dependsOn outputSourcesJar
+build.dependsOn outputJavadocJar
+build.dependsOn outputJar
+build.dependsOn vendordepJsonZip
 
 model {
     publishing {
-        def taskList = createComponentZipTasks($.components, ['Vendor'], zipBaseName, Zip, project, includeStandardZipFormat)
+        def taskList = createComponentZipTasks($.components, ['RenSim'], zipBaseName, Zip, project, includeStandardZipFormat)
 
         def driverTaskList = createComponentZipTasks($.components, ['VendorDriver'], driverZipBaseName, Zip, project, includeStandardZipFormat)
 
         publications {
+            cpp(MavenPublication) {
+                taskList.each {
+                    artifact it
+                }
+                artifact cppHeadersZip
+                artifact cppSourceZip
+
+                artifactId = "${baseArtifactId}-cpp"
+                groupId artifactGroupId
+                version pubVersion
+            }
+            driver(MavenPublication) {
+                driverTaskList.each {
+                    artifact it
+                }
+                artifact cppDriverHeadersZip
+
+                artifactId = "${baseArtifactId}-driver"
+                groupId artifactGroupId
+                version pubVersion
+            }
             java(MavenPublication) {
                 artifact jar
                 artifact sourcesJar
                 artifact javadocJar
 
                 artifactId = "${baseArtifactId}-java"
+                groupId artifactGroupId
+                version pubVersion
+            }
+            vendordep(MavenPublication) {
+                artifact vendordepJsonZip
+
+                artifactId = "${baseArtifactId}-vendordep"
                 groupId artifactGroupId
                 version pubVersion
             }
