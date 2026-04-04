@@ -41,14 +41,14 @@ ext.addTaskToCopyAllOutputs = { task ->
     copyAllOutputs.from task.archiveFile
 }
 
-def artifactGroupId = 'org.ironmaple'
-def baseArtifactId = 'maplesim'
-def driverZipBaseName = "_GROUP_org_ironmaple_ID_${baseArtifactId}-driver_CLS"
-def zipBaseName = "_GROUP_org_ironmaple_ID_${baseArtifactId}-cpp_CLS"
-def javaBaseName = "_GROUP_org_ironmaple_ID_${baseArtifactId}-java_CLS"
+def artifactGroupId = 'org.ruthiefrc'
+def baseArtifactId = 'rensim'
+def driverZipBaseName = "_GROUP_org_ruthiefrc_ID_${baseArtifactId}-driver_CLS"
+def zipBaseName = "_GROUP_org_ruthiefrc_ID_${baseArtifactId}-cpp_CLS"
+def javaBaseName = "_GROUP_org_ruthiefrc_ID_${baseArtifactId}-java_CLS"
 
 copy {
-    from "maple-sim.json"
+    from "rensim.json"
     into "$rootDir/../docs/vendordep"
     expand(version: "$pubVersion")
 }
