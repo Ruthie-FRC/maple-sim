@@ -249,7 +249,7 @@ public class SwerveDriveSimulation extends AbstractDriveTrainSimulation {
      */
     private void simulateModulePropellingForces() {
         for (int i = 0; i < moduleSimulations.length; i++) {
-            final Vec2 moduleWorldPosition = getWorldPoint(GeometryConvertor.toDyn4jVector2(moduleTranslations[i]));
+            final Vec2 moduleWorldPosition = getWorldPoint(GeometryConvertor.toVec2(moduleTranslations[i]));
             final Vec2 moduleForce = moduleSimulations[i].updateSimulationSubTickGetModuleForce(
                     super.getLinearVelocity(moduleWorldPosition),
                     getSimulatedDriveTrainPose().getRotation(),

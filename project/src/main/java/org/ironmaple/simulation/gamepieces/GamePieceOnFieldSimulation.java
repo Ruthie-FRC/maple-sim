@@ -100,8 +100,8 @@ public class GamePieceOnFieldSimulation extends RigidBody implements GamePiece {
         super.setAngularDamping(info.angularDamping);
         super.setBullet(true);
 
-        super.setTransform(GeometryConvertor.toDyn4jTransform(initialPose));
-        super.setLinearVelocity(GeometryConvertor.toDyn4jVector2(initialVelocityMPS));
+        super.setTransform(GeometryConvertor.toFrcTransform(initialPose));
+        super.setLinearVelocity(GeometryConvertor.toVec2(initialVelocityMPS));
     }
 
     /**
@@ -112,7 +112,7 @@ public class GamePieceOnFieldSimulation extends RigidBody implements GamePiece {
      * @param chassisSpeedsWorldFrame the speeds of the game piece
      */
     public void setVelocity(ChassisSpeeds chassisSpeedsWorldFrame) {
-        super.setLinearVelocity(GeometryConvertor.toDyn4jLinearVelocity(chassisSpeedsWorldFrame));
+        super.setLinearVelocity(GeometryConvertor.toLinearVelocityVec2(chassisSpeedsWorldFrame));
         super.setAngularVelocity(chassisSpeedsWorldFrame.omegaRadiansPerSecond);
     }
 

@@ -727,8 +727,8 @@ public abstract class SimulatedArena {
         protected void addBorderLine(Translation2d startingPoint, Translation2d endingPoint) {
             addCustomObstacle(
                     Geometry2d.createSegment(
-                            GeometryConvertor.toDyn4jVector2(startingPoint),
-                            GeometryConvertor.toDyn4jVector2(endingPoint)),
+                            GeometryConvertor.toVec2(startingPoint),
+                            GeometryConvertor.toVec2(endingPoint)),
                     new Pose2d());
         }
 
@@ -739,7 +739,7 @@ public abstract class SimulatedArena {
         protected void addCustomObstacle(Convex2d shape, Pose2d absolutePositionOnField) {
             final RigidBody obstacle = createObstacle(shape);
 
-            obstacle.transform.set(GeometryConvertor.toDyn4jTransform(absolutePositionOnField));
+            obstacle.transform.set(GeometryConvertor.toFrcTransform(absolutePositionOnField));
 
             obstacles.add(obstacle);
         }

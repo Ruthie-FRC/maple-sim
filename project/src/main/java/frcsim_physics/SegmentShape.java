@@ -36,15 +36,22 @@ public final class SegmentShape implements Convex2d {
         return false;
     }
 
+    /**
+     * AABB expansion epsilon for segments (metres).
+     *
+     * <p>Segments have zero thickness, so their AABB would have zero area along the segment's normal, which would
+     * cause the broad-phase check to miss edge-on contacts. This small expansion gives the AABB a non-zero depth.
+     */
+    private static final double AABB_EXPANSION = 0.05;
+
     @Override
     public double[] getWorldAabb(FrcTransform bodyTransform) {
         Vec2 w1 = getP1World(bodyTransform), w2 = getP2World(bodyTransform);
-        final double eps = 0.05;
         return new double[] {
-            Math.min(w1.x, w2.x) - eps,
-            Math.min(w1.y, w2.y) - eps,
-            Math.max(w1.x, w2.x) + eps,
-            Math.max(w1.y, w2.y) + eps
+            Math.min(w1.x, w2.x) - AABB_EXPANSION,
+            Math.min(w1.y, w2.y) - AABB_EXPANSION,
+            Math.max(w1.x, w2.x) + AABB_EXPANSION,
+            Math.max(w1.y, w2.y) + AABB_EXPANSION
         };
     }
 }

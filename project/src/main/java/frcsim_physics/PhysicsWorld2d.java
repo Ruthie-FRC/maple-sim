@@ -27,6 +27,22 @@ public final class PhysicsWorld2d {
     /** Zero-gravity constant – pass to {@link #setGravity(Vec2)} for a top-down simulation. */
     public static final Vec2 ZERO_GRAVITY = new Vec2(0, 0);
 
+    /**
+     * Baumgarte position-correction penetration slop (metres).
+     *
+     * <p>Penetrations smaller than this value are ignored to avoid jittering from floating-point noise.
+     * 5 mm is the standard value used by Box2D and dyn4j.
+     */
+    private static final double POSITION_CORRECTION_SLOP = 0.005;
+
+    /**
+     * Baumgarte position-correction factor (dimensionless, 0–1).
+     *
+     * <p>Fraction of remaining penetration (above {@link #POSITION_CORRECTION_SLOP}) resolved per step.
+     * Higher values correct faster but can overshoot; 0.2–0.4 is the typical range.
+     */
+    private static final double POSITION_CORRECTION_BETA = 0.3;
+
     private final List<RigidBody> bodies = new ArrayList<>();
     private final List<ContactListener2d> contactListeners = new ArrayList<>();
     private Vec2 gravity = ZERO_GRAVITY;
@@ -321,7 +337,14 @@ public final class PhysicsWorld2d {
         return len > 1e-14 ? new Vec2(-ey / len, ex / len) : new Vec2(0, 1);
     }
 
-    // ── Segment-rectangle ────────────────────────────────────────────────────
+    /**
+     * Skin-width tolerance for segment–rectangle narrow-phase detection.
+     *
+     * <p>A corner is considered "in contact" with a segment when it lies within this many metres of the closest point
+     * on the segment. Using a small but non-zero threshold avoids missing edge-cases where the corner sits exactly on
+     * the segment line.
+     */
+    private static final double SEGMENT_RECT_CONTACT_THRESHOLD = 0.02; // metres
 
     private static Manifold segmentRect(
             FrcTransform ta, SegmentShape seg, FrcTransform tb, RectangleShape rect) {
@@ -336,7 +359,7 @@ public final class PhysicsWorld2d {
             Vec2 closest = closestPointOnSegment(p1, p2, corner);
             double dx = corner.x - closest.x, dy = corner.y - closest.y;
             double dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 0.02 && dist < minPen) {
+            if (dist < SEGMENT_RECT_CONTACT_THRESHOLD && dist < minPen) {
                 minPen = dist;
                 cp = closest;
             }
@@ -345,7 +368,7 @@ public final class PhysicsWorld2d {
         Vec2 rectCenter = tb.transform(rect.getLocalOffset());
         Vec2 d = new Vec2(rectCenter.x - cp.x, rectCenter.y - cp.y);
         Vec2 normal = sn.dot(d) > 0 ? sn.copy() : sn.copy().negate();
-        return new Manifold(normal, 0.02 - minPen, cp);
+        return new Manifold(normal, SEGMENT_RECT_CONTACT_THRESHOLD - minPen, cp);
     }
 
     // ── Impulse resolution ───────────────────────────────────────────────────
@@ -393,12 +416,10 @@ public final class PhysicsWorld2d {
     // ── Position correction (Baumgarte) ──────────────────────────────────────
 
     private static void correctPositions(RigidBody a, RigidBody b, Manifold m) {
-        final double SLOP = 0.005; // penetration allowed before correction
-        final double BETA = 0.3; // fraction of penetration to correct per step
-        double pen = Math.max(m.penetration - SLOP, 0.0);
+        double pen = Math.max(m.penetration - POSITION_CORRECTION_SLOP, 0.0);
         double totalInvMass = a.getInverseMass() + b.getInverseMass();
         if (totalInvMass < 1e-14) return;
-        double correctionMag = pen * BETA / totalInvMass;
+        double correctionMag = pen * POSITION_CORRECTION_BETA / totalInvMass;
         Vec2 correction = new Vec2(correctionMag * m.normal.x, correctionMag * m.normal.y);
         if (!a.isStatic()) {
             Vec2 ta = a.transform.getTranslation();

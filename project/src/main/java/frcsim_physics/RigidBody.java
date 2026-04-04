@@ -89,6 +89,9 @@ public class RigidBody {
                 double hw = rs.getHalfWidth(), hh = rs.getHalfHeight();
                 totalInertia += m * (hw * hw + hh * hh) / 3.0;
             } else {
+                // Fallback: approximate inertia as m * r² with r² = 0.1 m²
+                // (≈ 32 cm effective radius). Correct inertia is only
+                // achievable for the shape types explicitly handled above.
                 totalInertia += m * 0.1;
             }
         }

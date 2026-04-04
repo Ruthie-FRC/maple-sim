@@ -76,7 +76,7 @@ public abstract class AbstractDriveTrainSimulation extends RigidBody {
      * @param robotPose the desired robot pose, represented as a {@link Pose2d}
      */
     public void setSimulationWorldPose(Pose2d robotPose) {
-        super.transform.set(GeometryConvertor.toDyn4jTransform(robotPose));
+        super.transform.set(GeometryConvertor.toFrcTransform(robotPose));
         super.linearVelocity.set(0, 0);
     }
 
@@ -93,7 +93,7 @@ public abstract class AbstractDriveTrainSimulation extends RigidBody {
      * @param givenSpeeds the desired chassis speeds, represented as a {@link ChassisSpeeds} object
      */
     public void setRobotSpeeds(ChassisSpeeds givenSpeeds) {
-        super.setLinearVelocity(GeometryConvertor.toDyn4jLinearVelocity(givenSpeeds));
+        super.setLinearVelocity(GeometryConvertor.toLinearVelocityVec2(givenSpeeds));
         super.setAngularVelocity(givenSpeeds.omegaRadiansPerSecond);
     }
 
