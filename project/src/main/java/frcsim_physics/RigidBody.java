@@ -31,6 +31,11 @@ public class RigidBody {
     private boolean isStatic = false;
 
     private double massKg = 1.0;
+
+    // ── RenSim native body backing ───────────────────────────────────────────
+
+    long nativeWorldHandle = -1L;
+    int nativeBodyIndex = -1;
     private double inertia = 1.0;
     private double invMass = 1.0;
     private double invInertia = 1.0;
@@ -146,9 +151,11 @@ public class RigidBody {
      *
      * <p>Unlike directly mutating {@link #transform}, this is the API-style setter used by
      * {@code GamePieceOnFieldSimulation} and mirrors dyn4j's {@code Body.setTransform(Transform)}.
+     * If a native body is attached, its position is synchronised immediately.
      */
     public void setTransform(FrcTransform newTransform) {
         transform.set(newTransform);
+        syncPositionToNative();
     }
 
     // ── Velocity ────────────────────────────────────────────────────────────
@@ -248,5 +255,72 @@ public class RigidBody {
 
     public boolean isBullet() {
         return bullet;
+    }
+
+    // ── RenSim native body integration ───────────────────────────────────────
+
+    /**
+     * Attaches this body to a RenSim native world body so that position and velocity can be
+     * synchronised through JNI.
+     *
+     * @param worldHandle the native world handle from {@link VendorJNI#createWorld}
+     * @param bodyIndex the native body index returned by {@link VendorJNI#createBody}
+     */
+    public void attachNativeBody(long worldHandle, int bodyIndex) {
+        this.nativeWorldHandle = worldHandle;
+        this.nativeBodyIndex = bodyIndex;
+    }
+
+    /**
+     * Returns {@code true} if this body is backed by a valid RenSim native body.
+     *
+     * @return true when the native world handle and body index are both valid
+     */
+    public boolean hasNativeBody() {
+        return nativeWorldHandle >= 0 && nativeBodyIndex >= 0;
+    }
+
+    /**
+     * Pushes the current Java-side position and linear velocity into the RenSim native body.
+     * No-op if no native body is attached or the native library is unavailable.
+     */
+    public void syncPositionToNative() {
+        if (!hasNativeBody()) return;
+        Vec2 t = transform.getTranslation();
+        VendorJNI.setBodyPosition(nativeWorldHandle, nativeBodyIndex, t.x, t.y, 0.0);
+        VendorJNI.setBodyLinearVelocity(
+                nativeWorldHandle, nativeBodyIndex, linearVelocity.x, linearVelocity.y, 0.0);
+    }
+
+    /**
+     * Pulls the RenSim native body's position and linear velocity back into the Java-side fields.
+     * No-op if no native body is attached or the native library is unavailable.
+     */
+    public void syncPositionFromNative() {
+        if (!hasNativeBody()) return;
+        double[] pos = new double[3];
+        if (VendorJNI.getBodyPosition(nativeWorldHandle, nativeBodyIndex, pos) == 0) {
+            transform.setTranslation(new Vec2(pos[0], pos[1]));
+        }
+        double[] vel = new double[3];
+        if (VendorJNI.getBodyLinearVelocity(nativeWorldHandle, nativeBodyIndex, vel) == 0) {
+            linearVelocity.set(vel[0], vel[1]);
+        }
+    }
+
+    /**
+     * Delegates a single integration step to the RenSim native engine.
+     *
+     * <p>Syncs the current Java velocity into native, steps the native world by one tick, then
+     * reads back the updated position. This is called by {@link PhysicsWorld2d} instead of the
+     * pure-Java {@link #integratePosition} when the native library is available.
+     *
+     * @param dtSeconds the sub-tick duration in seconds (must match the world's fixed timestep)
+     */
+    public void integrateNative(double dtSeconds) {
+        if (!hasNativeBody()) return;
+        syncPositionToNative();
+        VendorJNI.stepWorld(nativeWorldHandle, 1);
+        syncPositionFromNative();
     }
 }

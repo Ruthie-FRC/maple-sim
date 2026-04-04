@@ -48,10 +48,36 @@ public final class PhysicsWorld2d {
     private Vec2 gravity = ZERO_GRAVITY;
     private PhysicsSettings settings = new PhysicsSettings();
 
+    /** RenSim native world handle; -1 when native library is unavailable. */
+    private long nativeWorldHandle = -1L;
+
+    /**
+     * Creates a new physics world with native acceleration enabled when available.
+     *
+     * @param dtSeconds the fixed sub-tick timestep in seconds; used to configure the native world
+     */
+    public PhysicsWorld2d(double dtSeconds) {
+        if (VendorJNI.nativeLibraryAvailable) {
+            nativeWorldHandle = VendorJNI.createWorld(dtSeconds, false);
+        }
+    }
+
+    /** Creates a new physics world with a default 4 ms sub-tick timestep. */
+    public PhysicsWorld2d() {
+        this(0.004);
+    }
+
     // ── World management ────────────────────────────────────────────────────
 
     public void addBody(RigidBody body) {
-        if (!bodies.contains(body)) bodies.add(body);
+        if (!bodies.contains(body)) {
+            bodies.add(body);
+            if (nativeWorldHandle >= 0 && !body.hasNativeBody()) {
+                int nativeBodyIndex =
+                        VendorJNI.createBody(nativeWorldHandle, body.getMass().getMass());
+                body.attachNativeBody(nativeWorldHandle, nativeBodyIndex);
+            }
+        }
     }
 
     public boolean removeBody(RigidBody body) {
@@ -104,7 +130,11 @@ public final class PhysicsWorld2d {
 
         // 3. Integrate positions
         for (RigidBody body : bodies) {
-            body.integratePosition(dt);
+            if (body.hasNativeBody()) {
+                body.integrateNative(dt);
+            } else {
+                body.integratePosition(dt);
+            }
         }
 
         // 4. Clear force accumulators
